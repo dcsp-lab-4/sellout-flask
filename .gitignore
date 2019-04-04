@@ -1,4 +1,4 @@
 __pycache__/
 venv/
-app/__pycache__/
-templates/bootstrap/
+**/__pycache__/
+app/templates/bootstrap/
