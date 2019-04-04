@@ -8,6 +8,6 @@
         <p class="card-text">{{ product.description }}</p>
     </div>
     <div class="card-footer">
-        <a href="#" class="btn">Purchase ${{ product.price }}</a>
+        <a href="{{ url_for('product', pid=product.id) }}" class="btn">Purchase ${{ product.price }}</a>
     </div>
 </div>

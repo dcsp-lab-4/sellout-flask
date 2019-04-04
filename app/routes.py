@@ -48,5 +48,23 @@ def register():
         db.session.add(user)
         db.session.commit()
         flash('Congratulations, you are now a registered user!')
-        return redirect(url_for('login'))
+        return redirect(url_for('login')) 
     return render_template('register.html', title='Register', form=form)
+
+#product page routing
+@app.route('/product/<pid>')
+def product(pid):
+    if Item.query.filter_by(id=pid).first():
+        item = Item.query.get(pid)
+        return render_template('product.html', item=item)
+
+    else:
+        return render_template('404.html')
+
+#vendor page
+@app.route('/vendor/<username>')
+def vendor(username):
+    if User.query.filter_by(username=username).first():
+        vendor = User.query.filter_by(username=username).first()
+        return render_template('vendor.html', vendor=vendor)
+    
