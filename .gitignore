@@ -1,0 +1,4 @@
+__pycache__/
+venv/
+app/__pycache__/
+templates/bootstrap/
