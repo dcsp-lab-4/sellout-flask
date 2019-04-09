@@ -12,7 +12,6 @@ from app.models import User, Item
 @app.route('/')
 @app.route('/index')
 def index():
-
     return render_template('index.html', title="Front Page", featured=Item.query.filter_by(featured=True))
 
 #login page
@@ -67,4 +66,7 @@ def vendor(username):
     if User.query.filter_by(username=username).first():
         vendor = User.query.filter_by(username=username).first()
         return render_template('vendor.html', vendor=vendor)
+
+    else:
+        return render_template('404.html')
     
