@@ -2,6 +2,10 @@
 
 {% block app_content %}
 
-<h1>Welcome to {{ vendor.username }}'s store.</h1>
+    {% if current_user.username == vendor.username %}
+    <h1>Welcome, {{ vendor.username }}.</h1>
+    {% else %}
+    <h1>Welcome to {{ vendor.username }}'s storefront.</h1>
+    {% endif %}
 
 {% endblock %}

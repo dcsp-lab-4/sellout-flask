@@ -63,10 +63,33 @@ def product(pid):
 #vendor page
 @app.route('/vendor/<username>')
 def vendor(username):
-    if User.query.filter_by(username=username).first():
-        vendor = User.query.filter_by(username=username).first()
-        return render_template('vendor.html', vendor=vendor)
+    user = User.query.filter_by(username=username).first()
+    if user.usertype == 'Vendor':
+        return render_template('vendor.html', vendor=user)
 
     else:
         return render_template('404.html')
+
+#customer page
+@app.route('/user/<username>')
+def customer(username):
+    user = User.query.filter_by(username=username).first()
+    if user.usertype == 'Customer':
+        return render_template('customer.html', customer=user)
+
+    else:
+        return render_template('404.html')
+
+#admin page
+@app.route('/admin/<username>')
+def admin(username):
+    user = User.query.filter_by(username=username).first()
+    if user.usertype == 'Admin':
+        if current_user.is_anonymous or current_user.usertype != 'Admin':
+            return render_template('403.html')
+        
+        else:
+            return render_template('admin.html', admin=user)
     
+    else:
+        return render_template('404.html')

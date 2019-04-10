@@ -50,7 +50,13 @@
                 </li>
                 {% else %}
                 <li class="nav-item">
-                  <a class="nav-link" href="#">{{ current_user.firstname }}</a>
+                  {% if current_user.usertype=='Customer' %}
+                  <a class="nav-link" href="{{ url_for('customer', username=current_user.username) }}">{{ current_user.firstname }}</a>
+                  {% elif current_user.usertype=='Vendor' %}
+                  <a class="nav-link" href="{{ url_for('vendor', username=current_user.username) }}">{{ current_user.firstname }}</a>
+                  {% elif current_user.usertype=='Admin' %}
+                  <a class="nav-link" href="{{ url_for('admin', username=current_user.username) }}">{{ current_user.firstname }}</a>
+                  {% endif %}
                 </li>
                 <li class="nav-item">
                   <a class="nav-link" href="{{ url_for('logout') }}">Logout</a>

@@ -16,7 +16,7 @@ class LoginForm(FlaskForm):
 class RegistrationForm(FlaskForm):
     username = StringField('Username', validators=[DataRequired()])
     email = StringField('Email', validators=[DataRequired(), Email()])
-    phone = StringField('Phone Number', validators=[Phone()])
+    phone = StringField('Phone Number', validators=[DataRequired()])
     firstname = StringField('First Name', validators=[DataRequired()])
     lastname = StringField('Last Name', validators=[DataRequired()])
     usertype = SelectField('User Type', choices=[('Vendor', 'Vendor'), ('Customer', 'Customer')])
@@ -39,13 +39,13 @@ class RegistrationForm(FlaskForm):
 
     def validate_phone(self, phone):
         try:
-            number = phonenumbers.parse(phone.data)
-            if not phonenumbers.is_valid_number(number):
+            number = phonenumbers.parse(phone.data, None)
+            if not phonenumbers.is_possible_number(number):
                 raise ValidationError('Invalid phone number.')
 
         except:
-            number = phonenumbers.parse("+1"+phone.data)
-            if not phonenumbers.is_valid_number(number):
+            number = phonenumbers.parse("+1"+phone.data, None)
+            if not phonenumbers.is_possible_number(number):
                 raise ValidationError('Invalid phone number.')
 
 

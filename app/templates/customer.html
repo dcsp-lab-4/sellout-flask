@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+
+{% block app_content %}
+    {% if current_user.username == customer.username %}
+    <h1>Welcome, {{ customer.username }}.</h1>
+    {% else %}
+    <h1>Welcome to {{ customer.username }}'s profile page.</h1>
+    {% endif %}
+
+{% endblock %}
