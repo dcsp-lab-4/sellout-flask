@@ -14,17 +14,17 @@ class LoginForm(FlaskForm):
     submit   = SubmitField('Sign In')
 
 class RegistrationForm(FlaskForm):
-    username = StringField('Username', validators=[DataRequired()])
-    email = StringField('Email', validators=[DataRequired(), Email()])
-    phone = StringField('Phone Number', validators=[DataRequired()])
-    firstname = StringField('First Name', validators=[DataRequired()])
-    lastname = StringField('Last Name', validators=[DataRequired()])
-    usertype = SelectField('User Type', choices=[('Vendor', 'Vendor'), ('Customer', 'Customer')])
-    password = PasswordField('Password', validators=[DataRequired()])
-    password2 = PasswordField(
+    username    = StringField('Username', validators=[DataRequired()])
+    email       = StringField('Email', validators=[DataRequired(), Email()])
+    phone       = StringField('Phone Number', validators=[DataRequired()])
+    firstname   = StringField('First Name', validators=[DataRequired()])
+    lastname    = StringField('Last Name', validators=[DataRequired()])
+    usertype    = SelectField('User Type', choices=[('Vendor', 'Vendor'), ('Customer', 'Customer')])
+    password    = PasswordField('Password', validators=[DataRequired()])
+    password2   = PasswordField(
         'Verify Password', validators=[DataRequired(), EqualTo('password')])
     
-    submit = SubmitField('Sign Up')
+    submit      = SubmitField('Sign Up')
 
     #local field validators
     def validate_username(self, username):
@@ -48,6 +48,9 @@ class RegistrationForm(FlaskForm):
             if not phonenumbers.is_possible_number(number):
                 raise ValidationError('Invalid phone number.')
 
+class AddToCartForm(FlaskForm):
+
+    submit = SubmitField('Add to Cart')
 
 ''' 
 INCOMPLETE

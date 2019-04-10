@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block app_content %}
+
+<h1>{{ current_user.username }}'s Cart:</h1>
+
+<table class="table">
+<thead>
+    <tr>
+    <th scope="col">Product</th>
+    <th scope="col">Price</th>
+    <th scope="col">Quantity</th>
+    <th scope="col">Total Price</th>
+    <th scope="col"></th>
+    </tr>
+</thead>
+<tbody>
+{% for cartitem in cartitems %}
+
+{% include "cards/_cart_item.html" %}
+
+{% endfor %}
+</tbody>
+</table>
+<a class="btn btn-outline-primary" href="#" role="button">Checkout (Total: ${{ ccart.price }})</a>
+
+{% endblock %}

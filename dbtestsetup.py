@@ -1,5 +1,5 @@
 from app import db
-from app.models import User, Item
+from app.models import User, Item, Cart, CartItem
 
 db.drop_all()
 db.create_all()
@@ -24,11 +24,15 @@ test_items = [
 ]
 
 for user in test_users:
-    db.session.add(user)
+    user.initialize_cart()
     user.set_password(user.username + '123')
+    db.session.add(user)
 
 for item in test_items:
     db.session.add(item)
+
+bobcart = Cart.query.filter_by(customerid=1).first()
+bobcart.add_item(Item.query.filter_by(id=2).first())
 
 db.session.commit()
 

@@ -1,0 +1,7 @@
+<tr>
+    <th scope="row">{{ cartitem.item.title }}</th>
+    <td>${{ cartitem.item.price }}</td>
+    <td>{{ cartitem.quantity }}</td>
+    <td>${{ cartitem.quantity * cartitem.item.price }}</td>
+    <td><a class="btn btn-outline-danger" href="{{ url_for('cart', removed=cartitem.item.id) }}" role="button">X</a></td>
+</tr>

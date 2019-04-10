@@ -81,6 +81,9 @@
                 <input class="form-control mr-sm-2" type="search" placeholder="Search" aria-label="Search">
                 <button class="btn btn-outline-success my-2 my-sm-0" type="submit">Search</button>
             </form>
+            {% if not current_user.is_anonymous and current_user.usertype!='Vendor' and current_user.usertype!='Admin' %}
+            <a class="btn btn-outline-primary" href="{{ url_for('cart') }}" role="button">Cart</a>
+            {% endif %}
           </nav>
     {% endblock %}
     <body>

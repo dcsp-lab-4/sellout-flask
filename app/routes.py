@@ -1,12 +1,12 @@
-from flask import render_template, flash, redirect, url_for
+from flask import render_template, flash, redirect, url_for, request
 from app import app, db
 
 #login functionality
-from app.forms import LoginForm, RegistrationForm
+from app.forms import LoginForm, RegistrationForm, AddToCartForm
 
 #user functionality
 from flask_login import current_user, login_user, logout_user
-from app.models import User, Item
+from app.models import User, Item, Cart, CartItem
 
 #homepage
 @app.route('/')
@@ -49,6 +49,7 @@ def register():
             lastname=form.lastname.data,
             usertype=form.usertype.data)
         user.set_password(form.password.data)
+        user.initialize_cart()
         db.session.add(user)
         db.session.commit()
         flash('Congratulations, you are now a registered user!')
@@ -56,14 +57,39 @@ def register():
     return render_template('register.html', title='Register', form=form)
 
 #product page routing
-@app.route('/product/<pid>')
+@app.route('/product/<pid>', methods=['GET', 'POST'])
 def product(pid):
-    if Item.query.filter_by(id=pid).first():
-        item = Item.query.get(pid)
-        return render_template('product.html', item=item)
+    item = Item.query.filter_by(id=pid).first()
+    if item:
+        form = AddToCartForm()
+        if request.method == 'POST':
+            current_user.cart.add_item(item)
+            flash('Add to cart successful.')
+            return redirect(url_for('cart')) 
+        return render_template('product.html', item=item, form=form)
 
     else:
         return render_template('404.html')
+
+@app.route('/cart')
+@app.route('/cart/<removed>')
+def cart(removed=None):
+    if current_user.is_anonymous:
+        flash('You must register to buy items!', 'error')
+        return redirect(url_for('register')) 
+
+    elif current_user.usertype == 'Vendor' or current_user.usertype == 'Admin':
+        flash('You must be a customer to buy items!', 'error')
+        return redirect(url_for('index'))
+
+    else:
+        cart = Cart.query.filter_by(customerid=current_user.id).first()
+        if removed:
+            flash('Item removed from cart.')
+            cart.remove_item(Item.query.get(removed))
+        cartitems = CartItem.query.filter_by(cartid=cart.id)
+
+        return render_template('cart.html', cartitems=cartitems, ccart=cart)
 
 #vendor page
 @app.route('/vendor/<username>')
@@ -79,7 +105,7 @@ def vendor(username):
 @app.route('/user/<username>')
 def customer(username):
     user = User.query.filter_by(username=username).first()
-    if user.usertype == 'Customer':
+    if user and user.usertype == 'Customer':
         return render_template('customer.html', customer=user)
 
     else:
