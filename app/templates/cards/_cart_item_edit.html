@@ -1,7 +1,10 @@
 <tr>
     <th scope="row">{{ cartitem.item.title }}</th>
     <td>${{ cartitem.item.price }}</td>
-    <td>{{ cartitem.quantity }} <a href="{{ url_for('cart', edit=True) }}">Edit</a></td>
+    <td>
+        {{ form.quantities[loop_index0].hidden_tag() }}
+        {{ render_field(form.quantities[loop_index0].quantity) }} {{ form.submit() }}
+    </td>
     <td>${{ cartitem.quantity * cartitem.item.price }}</td>
     <td><a class="btn btn-outline-danger" href="{{ url_for('cart', removed=cartitem.item.id) }}" role="button">X</a></td>
 </tr>

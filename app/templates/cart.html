@@ -15,11 +15,27 @@
     </tr>
 </thead>
 <tbody>
-{% for cartitem in cartitems %}
+{% if not editing %}
+    {% for cartitem in cartitems %}
 
-{% include "cards/_cart_item.html" %}
+    {% include "cards/_cart_item.html" %}
 
-{% endfor %}
+    {% endfor %}
+{% else %}
+    {% from "_formhelpers.html" import render_field %}
+    
+    <form method="POST">
+        {% for cartitem in cartitems %}
+        {% with loop_index0 = loop.index0 %}
+        {% include "cards/_cart_item_edit.html" %}
+        {% endwith %}
+        {% endfor %}
+    </form>
+    
+{% endif %}
+{% if not cartitems.first() %}
+<tr><td>Your cart is empty.</td></tr>
+{% endif %}
 </tbody>
 </table>
 <a class="btn btn-outline-primary" href="#" role="button">Checkout (Total: ${{ ccart.price }})</a>

@@ -1,7 +1,7 @@
 from app import app, db
 from app.models import User, Item
 from flask_wtf import FlaskForm
-from wtforms import Form, StringField, PasswordField, BooleanField, SubmitField, SelectField
+from wtforms import Form, StringField, PasswordField, BooleanField, SubmitField, SelectField, IntegerField, FormField, FieldList
 from wtforms.validators import DataRequired, Email, EqualTo, ValidationError
 import phonenumbers
 
@@ -49,8 +49,19 @@ class RegistrationForm(FlaskForm):
                 raise ValidationError('Invalid phone number.')
 
 class AddToCartForm(FlaskForm):
-
     submit = SubmitField('Add to Cart')
+
+class QuantityEntryForm(FlaskForm):
+    quantity = IntegerField(validators=[DataRequired()])
+
+    def validate_quantity(self, quantity):
+        if quantity.data < 0:
+            raise ValidationError('Invalid quantity.')
+
+class CartQuantitiesForm(FlaskForm):
+    quantities = FieldList(FormField(QuantityEntryForm), min_entries=1)
+    submit = SubmitField('Done')
+
 
 ''' 
 INCOMPLETE

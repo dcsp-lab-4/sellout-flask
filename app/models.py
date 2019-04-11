@@ -55,25 +55,35 @@ class Cart(db.Model):
             cartitem.quantity += 1
         else:
             db.session.add(CartItem(cart=self, item=item, quantity=1))
-        
-        self.price += item.price
-        
+
         db.session.commit()
+        self.update_price()
 
     def set_quantity(self, item, quantity):
         cartitem = CartItem.query.filter_by(cartid=self.id, itemid=item.id).first()
         if cartitem:
-            self.price -= cartitem.quantity * cartitem.item.price
+            if quantity <= 0:
+                return self.remove_item(item)
             cartitem.quantity = quantity
-            self.price += quantity
             db.session.commit()
+            self.update_price()
 
     def remove_item(self, item):
         cartitem = CartItem.query.filter_by(cartid=self.id, itemid=item.id).first()
         if cartitem:
-            self.price -= cartitem.quantity * cartitem.item.price
             db.session.delete(cartitem)
             db.session.commit()
+            self.update_price()
+        return True
+
+    def update_price(self):
+        cartitems = CartItem.query.filter_by(cartid=self.id)
+        total_price = 0.0
+        for cartitem in cartitems:
+            total_price += cartitem.item.price * cartitem.quantity
+        
+        self.price = total_price
+        db.session.commit()
 
 
 class CartItem(db.Model):

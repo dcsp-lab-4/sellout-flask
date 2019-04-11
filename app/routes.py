@@ -2,7 +2,7 @@ from flask import render_template, flash, redirect, url_for, request
 from app import app, db
 
 #login functionality
-from app.forms import LoginForm, RegistrationForm, AddToCartForm
+from app.forms import LoginForm, RegistrationForm, AddToCartForm, CartQuantitiesForm
 
 #user functionality
 from flask_login import current_user, login_user, logout_user
@@ -71,9 +71,8 @@ def product(pid):
     else:
         return render_template('404.html')
 
-@app.route('/cart')
-@app.route('/cart/<removed>')
-def cart(removed=None):
+@app.route('/cart', methods=['GET', 'POST'])
+def cart():
     if current_user.is_anonymous:
         flash('You must register to buy items!', 'error')
         return redirect(url_for('register')) 
@@ -83,19 +82,39 @@ def cart(removed=None):
         return redirect(url_for('index'))
 
     else:
+        editing = False
+        form = None
         cart = Cart.query.filter_by(customerid=current_user.id).first()
-        if removed:
+        if request.args.get('removed'):
             flash('Item removed from cart.')
-            cart.remove_item(Item.query.get(removed))
+            cart.remove_item(Item.query.get(request.args.get('removed')))
+            return redirect(url_for('cart'))
+
         cartitems = CartItem.query.filter_by(cartid=cart.id)
 
-        return render_template('cart.html', cartitems=cartitems, ccart=cart)
+        if request.args.get('edit'):
+            editing = True
+            quantities = []
+            for cartitem in cartitems:
+                temp = {}
+                temp["quantity"] = cartitem.quantity
+                quantities.append(temp)
+            form = CartQuantitiesForm(quantities=quantities)
+        
+        if form and request.method == 'POST':
+            for i, cartitem in enumerate(cartitems):
+                current_user.cart.set_quantity(cartitem.item, form.quantities[i].quantity.data)
+
+            flash('Quantities saved.')
+            return redirect(url_for('cart'))
+
+        return render_template('cart.html', cartitems=cartitems, ccart=cart, editing=editing, form=form)
 
 #vendor page
 @app.route('/vendor/<username>')
 def vendor(username):
     user = User.query.filter_by(username=username).first()
-    if user.usertype == 'Vendor':
+    if user and user.usertype == 'Vendor':
         return render_template('vendor.html', vendor=user)
 
     else:
@@ -115,7 +134,7 @@ def customer(username):
 @app.route('/admin/<username>')
 def admin(username):
     user = User.query.filter_by(username=username).first()
-    if user.usertype == 'Admin':
+    if user and user.usertype == 'Admin':
         if current_user.is_anonymous or current_user.usertype != 'Admin':
             return render_template('403.html')
         
