@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+
+{% block app_content %}
+    <div class="row">
+        {% for product in items %}
+        <div class="col-md-3">
+            {% include "cards/_featured_display.html"  %}
+        </div>
+        {% endfor %}
+
+        {% if not items.first() %}
+        <h1>No results.</h1>
+        {% endif %}
+    </div>
+{% endblock %}

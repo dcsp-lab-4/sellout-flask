@@ -13,6 +13,10 @@ To run this project, you'll need a few things installed:
   * The module that handles database access for us
 - Flask-Migrate
   * The module that greatly simplifies updates to our database for us (adding/removing/modifying columns etc)
+- phonenumbers
+  * The module that handles phone number parsing for us.
+- Elasticsearch
+  * [Elasticsearch](https://www.elastic.co/guide/en/elasticsearch/reference/current/install-elasticsearch.html#install-elasticsearch "Elasticsearch install page") is a full-text search engine that we use for querying the item database. Getting it running locally is a little involved; the site will still work (minus the search feature) if you don't have an Elasticsearch cluster running locally.
 
 You may choose to install these things on a virtual environment rather than your root Python install. To create a virtual environment for these things, run the following command in your terminal in the sellout-flask folder: 
 ```bash

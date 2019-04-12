@@ -77,8 +77,8 @@
                 </li>
               </ul>
             </div>
-            <form class="form-inline">
-                <input class="form-control mr-sm-2" type="search" placeholder="Search" aria-label="Search">
+            <form class="form-inline" method="get" action="{{ url_for('search') }}">
+                {{ g.search_form.query(size=20, class='form-control mr-sm-2', placeholder=g.search_form.query.label.text) }}
                 <button class="btn btn-outline-success my-2 my-sm-0" type="submit">Search</button>
             </form>
             {% if not current_user.is_anonymous and current_user.usertype!='Vendor' and current_user.usertype!='Admin' %}

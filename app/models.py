@@ -1,22 +1,71 @@
 from app import db, login
+from app.search import add_to_index, remove_from_index, query_index
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import UserMixin
 
+#this is a mixin class that gives searchability with Elasticsearch
+class SearchableMixin(object):
+    @classmethod
+    def search(cls, expression, page, per_page):
+        ids, total = query_index(cls.__tablename__, expression, page, per_page)
+        if total == 0 or not len(ids):
+            return cls.query.filter_by(id=0), 0
+        
+        when = []
+        for i in range(len(ids)):
+            when.append((ids[i], i))
+        
+        #return cls.query.filter(cls.id.in_(ids)).order_by(db.case(when, value=cls.id)), total
+        return cls.query.filter(cls.id.in_(ids)).order_by(
+            db.case(when, value=cls.id)), total
+
+    @classmethod
+    def before_commit(cls, session):
+        #figure out what the current db.session's state is
+        session._changes = {
+            'add': list(session.new),
+            'update': list(session.dirty),
+            'delete': list(session.deleted)
+        }
+    
+    @classmethod
+    def after_commit(cls, session):
+        for obj in session._changes['add']:
+            if isinstance(obj, SearchableMixin):
+                add_to_index(obj.__tablename__, obj)
+        for obj in session._changes['update']:
+            if isinstance(obj, SearchableMixin):
+                add_to_index(obj.__tablename__, obj)
+        for obj in session._changes['delete']:
+            if isinstance(obj, SearchableMixin):
+                remove_from_index(obj.__tablename__, obj)
+        
+        session._changes = None
+
+    @classmethod
+    def reindex(cls):
+        for obj in cls.query:
+            add_to_index(obj.__tablename__, obj)
+
+#listen to SQLAlchemy commits so the elasticsearch indices are always updated
+db.event.listen(db.session, 'before_commit', SearchableMixin.before_commit)
+db.event.listen(db.session, 'after_commit', SearchableMixin.after_commit)
+
 class User(UserMixin, db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(64), index=True, unique=True)
-    email = db.Column(db.String(120), index=True, unique=True)
-    firstname = db.Column(db.String(64))
-    lastname = db.Column(db.String(64))
-    phone = db.Column(db.String(16))
-    usertype = db.Column(db.String(16))
-    address = db.Column(db.String(64))
-    password_hash = db.Column(db.String(128))
-    items = db.relationship('Item', backref='vendor', lazy='dynamic')
-    cart = db.relationship('Cart', uselist=False, back_populates='customer')
+    id              = db.Column(db.Integer, primary_key=True)
+    username        = db.Column(db.String(64), index=True, unique=True)
+    email           = db.Column(db.String(120), index=True, unique=True)
+    firstname       = db.Column(db.String(64))
+    lastname        = db.Column(db.String(64))
+    phone           = db.Column(db.String(16))
+    usertype        = db.Column(db.String(16))
+    address         = db.Column(db.String(64))
+    password_hash   = db.Column(db.String(128))
+    items           = db.relationship('Item', backref='vendor', lazy='dynamic')
+    cart            = db.relationship('Cart', uselist=False, back_populates='customer')
 
     def initialize_cart(self):
-        newcart = Cart(customer=self, price=0.0)
+        newcart = Cart(customer=self, cartprice=0.0)
         db.session.add(newcart)
         db.session.commit()
 
@@ -29,25 +78,28 @@ class User(UserMixin, db.Model):
     def __repr__(self):
         return '<User {}: {} {}>'.format(self.username, self.firstname, self.lastname)   
 
-class Item(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    title = db.Column(db.String(64))
+class Item(SearchableMixin, db.Model):
+    __searchable__ = ['title', 'description']
+    id          = db.Column(db.Integer, primary_key=True)
+    title       = db.Column(db.String(64))
     description = db.Column(db.String(300))
-    price = db.Column(db.Float)
-    stock = db.Column(db.Integer)
-    featured = db.Column(db.Boolean)
-    vendorid = db.Column(db.Integer, db.ForeignKey('user.id'))
-    cartitem = db.relationship('CartItem', backref='item', lazy='dynamic')
+    price       = db.Column(db.Float)
+    stock       = db.Column(db.Integer)
+    featured    = db.Column(db.Boolean)
+    vendorid    = db.Column(db.Integer, db.ForeignKey('user.id'))
+    cartitem    = db.relationship('CartItem', backref='item', lazy='dynamic')
+    tags        = db.relationship('ItemTag', backref='item', lazy='dynamic')
 
     def __repr__(self):
         return '<Item {} sold by {}>'.format(self.title, User.query.get(self.vendorid).username)
 
+#cart system models
 class Cart(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    customerid = db.Column(db.Integer, db.ForeignKey('user.id'))
-    customer = db.relationship('User', back_populates='cart')
-    price = db.Column(db.Float)
-    items = db.relationship('CartItem', backref='cart', lazy='dynamic')
+    id          = db.Column(db.Integer, primary_key=True)
+    customerid  = db.Column(db.Integer, db.ForeignKey('user.id'))
+    customer    = db.relationship('User', back_populates='cart')
+    cartprice   = db.Column(db.Float)
+    items       = db.relationship('CartItem', backref='cart', lazy='dynamic')
 
     def add_item(self, item):
         cartitem = CartItem.query.filter_by(cartid=self.id, itemid=item.id).first()
@@ -82,16 +134,33 @@ class Cart(db.Model):
         for cartitem in cartitems:
             total_price += cartitem.item.price * cartitem.quantity
         
-        self.price = total_price
+        self.cartprice = total_price
         db.session.commit()
 
 
 class CartItem(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    quantity = db.Column(db.Integer)
-    itemid = db.Column(db.Integer, db.ForeignKey('item.id'))
-    cartid = db.Column(db.Integer, db.ForeignKey('cart.id'))
+    id          = db.Column(db.Integer, primary_key=True)
+    quantity    = db.Column(db.Integer)
+    itemid      = db.Column(db.Integer, db.ForeignKey('item.id'))
+    cartid      = db.Column(db.Integer, db.ForeignKey('cart.id'))
+
+
+#tagging system models
+class Tag(SearchableMixin, db.Model):
+    __searchable__ = ['title']
+    id          = db.Column(db.Integer, primary_key=True)
+    title       = db.Column(db.String(64), index=True, unique=True)
+    itemtags    = db.relationship('ItemTag', backref='tag', lazy='dynamic')
+
+class ItemTag(db.Model):
+    id      = db.Column(db.Integer, primary_key=True)
+    itemid  = db.Column(db.Integer, db.ForeignKey('item.id'))
+    tagid   = db.Column(db.Integer, db.ForeignKey('tag.id'))
+
+
+        
 
 @login.user_loader
 def load_user(id):
     return User.query.get(int(id))
+

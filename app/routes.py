@@ -1,12 +1,17 @@
-from flask import render_template, flash, redirect, url_for, request
+from flask import render_template, flash, redirect, url_for, request, g
 from app import app, db
 
 #login functionality
-from app.forms import LoginForm, RegistrationForm, AddToCartForm, CartQuantitiesForm
+from app.forms import LoginForm, RegistrationForm, AddToCartForm, CartQuantitiesForm, SearchForm
 
 #user functionality
 from flask_login import current_user, login_user, logout_user
 from app.models import User, Item, Cart, CartItem
+
+#universal content rendering
+@app.before_request
+def before_request():
+    g.search_form = SearchForm()
 
 #homepage
 @app.route('/')
@@ -22,7 +27,8 @@ def login():
     form = LoginForm()
     if form.validate_on_submit():
         user = User.query.filter_by(username=form.username.data).first()
-        if user is None or not user.check_password(form.password.data) or (user.usertype != form.usertype.data and user.usertype != 'Admin'):
+
+        if not user or not user.check_password(form.password.data) or (user.usertype != form.usertype.data and user.usertype != 'Admin'):
             flash('No such user exists.', 'error')
             return redirect(url_for('login'))
         login_user(user, remember=form.remember.data)
@@ -48,6 +54,7 @@ def register():
             firstname=form.firstname.data,
             lastname=form.lastname.data,
             usertype=form.usertype.data)
+            
         user.set_password(form.password.data)
         user.initialize_cart()
         db.session.add(user)
@@ -110,6 +117,15 @@ def cart():
 
         return render_template('cart.html', cartitems=cartitems, ccart=cart, editing=editing, form=form)
 
+@app.route('/search')
+def search():
+    if not g.search_form.validate():
+        return redirect(url_for('index'))
+    items, total = Item.search(g.search_form.query.data, 1, 10)
+    
+    return render_template('search.html', items=items)
+
+##profile pages
 #vendor page
 @app.route('/vendor/<username>')
 def vendor(username):
@@ -143,3 +159,4 @@ def admin(username):
     
     else:
         return render_template('404.html')
+

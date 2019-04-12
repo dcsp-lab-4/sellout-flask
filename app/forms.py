@@ -1,6 +1,7 @@
 from app import app, db
 from app.models import User, Item
 from flask_wtf import FlaskForm
+from flask import request
 from wtforms import Form, StringField, PasswordField, BooleanField, SubmitField, SelectField, IntegerField, FormField, FieldList
 from wtforms.validators import DataRequired, Email, EqualTo, ValidationError
 import phonenumbers
@@ -63,10 +64,14 @@ class CartQuantitiesForm(FlaskForm):
     submit = SubmitField('Done')
 
 
-''' 
-INCOMPLETE
+#elasticsearch form
+class SearchForm(FlaskForm):
+    query = StringField('Search', validators=[DataRequired()])
 
-class ProductSearchForm(Form):
-    select = SelectField('Search among:', choices=[('vendors', 'Vendors'), ('products', 'Products')])
-    search = StringField('')
-'''
+    def __init__(self, *args, **kwargs):
+        if 'formdata' not in kwargs:
+            kwargs['formdata'] = request.args
+        if 'csrf_enabled' not in kwargs:
+            kwargs['csrf_enabled'] = False
+        super(SearchForm, self).__init__(*args, **kwargs)
+
