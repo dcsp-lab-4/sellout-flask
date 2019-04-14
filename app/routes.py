@@ -1,12 +1,19 @@
 from flask import render_template, flash, redirect, url_for, request, g
+from flask_uploads import UploadSet, configure_uploads, IMAGES
 from app import app, db
 
 #login functionality
-from app.forms import LoginForm, RegistrationForm, AddToCartForm, CartQuantitiesForm, SearchForm
+from app.forms import LoginForm, RegistrationForm, AddToCartForm, CartQuantitiesForm, SearchForm, ItemForm
 
 #user functionality
 from flask_login import current_user, login_user, logout_user
 from app.models import User, Item, Cart, CartItem
+
+#add_item Upload Configurations 
+photos = UploadSet('photos',IMAGES)
+app.config['UPLOADED_PHOTOS_DEST'] = 'app/static/img'
+app.config['UPLOADED_PHOTOS_URL'] = 'http://127.0.0.1:5000/static/img/'
+configure_uploads(app,photos)
 
 #universal content rendering
 @app.before_request
@@ -78,6 +85,7 @@ def product(pid):
     else:
         return render_template('404.html')
 
+
 @app.route('/cart', methods=['GET', 'POST'])
 def cart():
     if current_user.is_anonymous:
@@ -124,6 +132,39 @@ def search():
     items, total = Item.search(g.search_form.query.data, 1, 10)
     
     return render_template('search.html', items=items)
+
+##vendor stuff
+#add_item page
+@app.route('/add_item',methods=["GET","POST"])
+def add_item():
+        form = ItemForm()
+        if request.method == 'POST' and 'photo' in request.files and form.validate_on_submit():
+            filename = photos.save(request.files['photo'])
+            url = photos.url(filename)
+            item = Item(title=form.name.data,
+                price=float(form.price.data),
+                description=form.description.data,
+                stock=int(form.stock.data),
+                vendorid=current_user.id,
+                image=url)
+            db.session.add(item)
+            db.session.commit()
+            flash("Congratulations, your item has been added")
+            return redirect(url_for('inventory',username=current_user.username))
+        else:
+            return render_template('add_item.html', title="Add Item", form=form)
+
+#inventory page
+@app.route('/inventory',methods=["GET"])
+def inventory():
+    if not current_user.is_anonymous and current_user.usertype == 'Vendor':
+        items = Item.query.filter_by(vendorid = current_user.id).all()
+        if request.args.get('removed'):
+            flash('Item removed from your inventory.')
+            db.session.delete(Item.query.get(request.args.get('removed')))
+            db.session.commit()
+            return redirect(url_for('inventory'))
+        return render_template('inventory.html',items = items)
 
 ##profile pages
 #vendor page

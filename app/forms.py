@@ -2,7 +2,7 @@ from app import app, db
 from app.models import User, Item
 from flask_wtf import FlaskForm
 from flask import request
-from wtforms import Form, StringField, PasswordField, BooleanField, SubmitField, SelectField, IntegerField, FormField, FieldList
+from wtforms import Form, StringField, PasswordField, BooleanField, SubmitField, SelectField, FloatField, IntegerField, FormField, FieldList
 from wtforms.validators import DataRequired, Email, EqualTo, ValidationError
 import phonenumbers
 
@@ -74,4 +74,12 @@ class SearchForm(FlaskForm):
         if 'csrf_enabled' not in kwargs:
             kwargs['csrf_enabled'] = False
         super(SearchForm, self).__init__(*args, **kwargs)
+
+#addItem to Inventory form
+class ItemForm(FlaskForm):
+    name = StringField('Name',validators=[DataRequired()])
+    price = FloatField('Price',validators=[DataRequired()])
+    description = StringField('Description',validators=[DataRequired()])
+    stock = IntegerField('Stock',validators=[DataRequired()])
+    submit = SubmitField('Submit',validators=[DataRequired()])
 

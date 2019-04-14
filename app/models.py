@@ -86,6 +86,7 @@ class Item(SearchableMixin, db.Model):
     price       = db.Column(db.Float)
     stock       = db.Column(db.Integer)
     featured    = db.Column(db.Boolean)
+    image       = db.Column(db.String(64))
     vendorid    = db.Column(db.Integer, db.ForeignKey('user.id'))
     cartitem    = db.relationship('CartItem', backref='item', lazy='dynamic')
     tags        = db.relationship('ItemTag', backref='item', lazy='dynamic')

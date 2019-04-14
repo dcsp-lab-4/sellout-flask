@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+
+{% block app_content %}
+<html>
+<body>
+<table class="table">
+<thead>
+    <th>Name</th>
+    <th>Description</th>
+    <th>Price</th>
+    <th>Stock</th>
+    <th></th>
+</thead>
+<tbody>
+    {% for item in items %}
+        <tr>
+            <td>{{ item.title }}</td>
+            <td>{{ item.description }}</td>
+            <td>{{ item.price }}</td>
+            <td>{{ item.stock }}</td>
+            <td><a class="btn btn-outline-danger" href="{{ url_for('inventory', removed=item.id) }}" role="button">X</a></td>
+        </tr>
+    {% endfor %}
+</tbody>
+</table>
+</body>
+</html>
+{% endblock %}
