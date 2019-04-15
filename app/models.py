@@ -157,6 +157,8 @@ class Cart(db.Model):
                 name=(self.customer.firstname+" "+self.customer.lastname),
                 address=self.customer.address
             ))
+            item = Item.query.get(cartitem.itemid)
+            item.stock -= cartitem.quantity
             db.session.delete(cartitem)
         
         db.session.commit()
