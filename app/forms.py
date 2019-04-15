@@ -2,28 +2,35 @@ from app import app, db
 from app.models import User, Item
 from flask_wtf import FlaskForm
 from flask import request
-from wtforms import Form, StringField, PasswordField, BooleanField, SubmitField, SelectField, FloatField, IntegerField, FormField, FieldList
-from wtforms.validators import DataRequired, Email, EqualTo, ValidationError
+from wtforms import Form, StringField, PasswordField, BooleanField, SubmitField, SelectField, DecimalField, IntegerField, FormField, FieldList
+from wtforms.validators import DataRequired, Email, EqualTo, ValidationError, Length, NumberRange
 import phonenumbers
 
 
 class LoginForm(FlaskForm):
     username = StringField('Username', validators=[DataRequired()])
+
     password = PasswordField('Password', validators=[DataRequired()])
     usertype = SelectField('User Type', choices=[('Vendor', 'Vendor'), ('Customer', 'Customer')])
     remember = BooleanField('Remember Me')
     submit   = SubmitField('Sign In')
 
 class RegistrationForm(FlaskForm):
-    username    = StringField('Username', validators=[DataRequired()])
-    email       = StringField('Email', validators=[DataRequired(), Email()])
+    username    = StringField('Username', validators=[
+        DataRequired(),
+        Length(min=3, max=32, message="Username must be between 3 and 32 characters.")])
+
+    email       = StringField('Email', validators=[
+        DataRequired(), 
+        Email(message="Invalid email address.")])
+
     phone       = StringField('Phone Number', validators=[DataRequired()])
+    address     = StringField('Address', validators=[DataRequired()])
     firstname   = StringField('First Name', validators=[DataRequired()])
     lastname    = StringField('Last Name', validators=[DataRequired()])
     usertype    = SelectField('User Type', choices=[('Vendor', 'Vendor'), ('Customer', 'Customer')])
     password    = PasswordField('Password', validators=[DataRequired()])
-    password2   = PasswordField(
-        'Verify Password', validators=[DataRequired(), EqualTo('password')])
+    password2   = PasswordField('Verify Password', validators=[DataRequired(), EqualTo('password')])
     
     submit      = SubmitField('Sign Up')
 
@@ -77,9 +84,15 @@ class SearchForm(FlaskForm):
 
 #addItem to Inventory form
 class ItemForm(FlaskForm):
-    name = StringField('Name',validators=[DataRequired()])
-    price = FloatField('Price',validators=[DataRequired()])
-    description = StringField('Description',validators=[DataRequired()])
-    stock = IntegerField('Stock',validators=[DataRequired()])
-    submit = SubmitField('Submit',validators=[DataRequired()])
+    name        = StringField('Name',validators=[DataRequired()])
+    price       = DecimalField('Price',validators=[
+        DataRequired(), 
+        NumberRange(min=0.01, message="Must have a positive price.")])
+    description = StringField('Description',validators=[
+        DataRequired(), 
+        Length(max=300)])
+    stock       = IntegerField('Stock',validators=[
+        DataRequired(), 
+        NumberRange(min=1, message="Must have stock.")])
+    submit      = SubmitField('Submit',validators=[DataRequired()])
 

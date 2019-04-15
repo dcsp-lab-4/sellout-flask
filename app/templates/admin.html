@@ -1,7 +1,23 @@
 {% extends "base.html" %}
 
 {% block app_content %}
-
-    <h1>Welcome, {{ admin.username }}.</h1>
-
+    <h1>Welcome, {{ admin.username }}. Here's a list of users:</h1>
+    <table class="table">
+        <thead>
+            <th>User #</th>
+            <th>Username</th>
+            <th>Email</th>
+            <th>User Type</th>
+        </thead>
+        <tbody>
+            {% for user in users %}
+                <tr>
+                    <td>{{ user.id }}</td>
+                    <td>{{ user.username }}</td>
+                    <td>{{ user.email }}</td>
+                    <td>{{ user.usertype }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
 {% endblock %}

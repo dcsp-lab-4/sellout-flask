@@ -4,8 +4,51 @@
 
     {% if current_user.username == vendor.username %}
     <h1>Welcome, {{ vendor.username }}.</h1>
+    <h2>Orders to Complete:</h2>
+    <table class="table">
+        <thead>
+            <th>Name</th>
+            <th>Quantity</th>
+            <th>Total Payment</th>
+            <th>Recipient</th>
+            <th>Address</th>
+            <th></th>
+        </thead>
+        <tbody>
+            {% for order in orders %}
+                <tr>
+                    <td><a href="{{ url_for('product', pid=order.item.id) }}">{{ order.item.title }}</a></td>
+                    <td>{{ order.quantity }}</td>
+                    <td>{{ order.price }}</td>
+                    <td>{{ order.name }}</td>
+                    <td>{{ order.address }}</td>
+                    <td><a class="btn btn-outline-primary" href="{{ url_for('vendor', completed=order.id, username=current_user.username) }}" role="button">✓</a></td>
+                </tr>
+            {% endfor %}
+            {% if not orders.first() %}
+                <tr><td>You have no outstanding orders.</td></tr>
+            {% endif %}
+        </tbody>
+    </table>
     {% else %}
     <h1>Welcome to {{ vendor.username }}'s storefront.</h1>
+    <h2>Items for sale:</h2>
+    <table class="table">
+        <thead>
+            <th>Name</th>
+            <th>Description</th>
+            <th>Price</th>
+        </thead>
+        <tbody>
+            {% for item in items %}
+                <tr>
+                    <td><a href="{{ url_for('product', pid=item.id) }}">{{ item.title }}</a></td>
+                    <td>{{ item.description }}</td>
+                    <td>{{ item.price }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
     {% endif %}
 
 {% endblock %}

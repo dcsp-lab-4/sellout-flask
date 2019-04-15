@@ -4,16 +4,17 @@
     <div class="container">
         <div class="card bg-dark text-white">
         <!-- Button trigger modal -->
-        {% if current_user.is_anonymous or current_user.usertype=='Vendor' or current_user.usertype=='Admin' %}
             <h1 class="card-body text-center">{{ item.title }}</h1>
-            <img src="{{ item.image }}" style="width:500px;height:300px;margin:0 auto;">
+            <img src="{{ photourl }}" class="img-fluid mx-auto">
             <p class="card-body text-center">Price: ${{item.price}}</p>
             <p class="card-body text-center">Item Description: {{item.description}}</p>
-            <p class="card-body text-center">Item ID: {{item.id}}</p>
-        {% else %}
+            <p class="card-body text-center">Item Vendor: <a href="{{ url_for('vendor', username=item.vendor.username) }}">{{ vendorname }}</a></p>
+        {% if not current_user.is_anonymous and current_user.usertype=='Customer' %}
             <form action="" method="post" novalidate>
                 <p class="card-body text-center">{{ form.submit() }}</p>
             </form>
+        {% elif current_user.usertype=='Admin' %}
+            <a class="btn btn-outline-primary" href="{{ url_for('product', pid=item.id, featuring=item.id) }}" role="button">Feature</a>
         {% endif %}
         </div>
     </div>

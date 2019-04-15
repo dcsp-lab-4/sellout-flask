@@ -62,6 +62,7 @@ class User(UserMixin, db.Model):
     address         = db.Column(db.String(64))
     password_hash   = db.Column(db.String(128))
     items           = db.relationship('Item', backref='vendor', lazy='dynamic')
+
     cart            = db.relationship('Cart', uselist=False, back_populates='customer')
 
     def initialize_cart(self):
@@ -89,7 +90,13 @@ class Item(SearchableMixin, db.Model):
     image       = db.Column(db.String(64))
     vendorid    = db.Column(db.Integer, db.ForeignKey('user.id'))
     cartitem    = db.relationship('CartItem', backref='item', lazy='dynamic')
+    order       = db.relationship('Order', backref='item', lazy='dynamic')
     tags        = db.relationship('ItemTag', backref='item', lazy='dynamic')
+
+    def toggle_feature(self):
+        self.featured = not self.featured
+        db.session.commit()
+        return self.featured
 
     def __repr__(self):
         return '<Item {} sold by {}>'.format(self.title, User.query.get(self.vendorid).username)
@@ -138,6 +145,24 @@ class Cart(db.Model):
         self.cartprice = total_price
         db.session.commit()
 
+    def checkout(self):
+        cartitems = CartItem.query.filter_by(cartid=self.id)
+        for cartitem in cartitems:
+            db.session.add(Order(
+                item=cartitem.item,
+                quantity=cartitem.quantity,
+                price=(cartitem.item.price*cartitem.quantity),
+                customer=self.customer,
+                vendor=cartitem.item.vendor,
+                name=(self.customer.firstname+" "+self.customer.lastname),
+                address=self.customer.address
+            ))
+            db.session.delete(cartitem)
+        
+        db.session.commit()
+        self.update_price()
+        
+
 
 class CartItem(db.Model):
     id          = db.Column(db.Integer, primary_key=True)
@@ -145,6 +170,18 @@ class CartItem(db.Model):
     itemid      = db.Column(db.Integer, db.ForeignKey('item.id'))
     cartid      = db.Column(db.Integer, db.ForeignKey('cart.id'))
 
+class Order(db.Model):
+    id              = db.Column(db.Integer, primary_key=True)
+    name            = db.Column(db.String(64))
+    address         = db.Column(db.String(128))
+    quantity        = db.Column(db.Integer)
+    price           = db.Column(db.Float)
+    itemid          = db.Column(db.Integer, db.ForeignKey('item.id'))
+    customerid      = db.Column(db.Integer, db.ForeignKey('user.id'))
+    vendorid        = db.Column(db.Integer, db.ForeignKey('user.id'))
+    
+    customer        = db.relationship('User', foreign_keys=[customerid])
+    vendor          = db.relationship('User', foreign_keys=[vendorid])
 
 #tagging system models
 class Tag(SearchableMixin, db.Model):
