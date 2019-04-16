@@ -145,19 +145,19 @@ def checkout():
         cart = Cart.query.filter_by(customerid=current_user.id).first()
         cartitems = CartItem.query.filter_by(cartid=cart.id)
         if cartitems:
-            error_str = 'Vendor does not have enough items to fulfill order for:'
+            error_str = 'Vendor does not have enough items to fulfill order for: '
             errors = 0
             for cartitem in cartitems:
                 if cartitem.quantity >= cartitem.item.stock:
-                    error_str += 'cartitem.item.title\n'
+                    error_str += cartitem.item.title + ', '
                     errors += 1
 
         else:
-            error_str += 'Cart is empty.'
+            error_str += 'Cart is empty.  '
             errors += 1
 
         if errors > 0:
-            flash(error_str, 'error')
+            flash(error_str[:-2], 'error')
             return redirect(url_for('cart'))
         
         else:
