@@ -33,6 +33,7 @@ pip3 install flask-login
 pip3 install flask-wtf
 pip3 install flask-sqlalchemy
 pip3 install flask-migrate
+pip3 install flask-uploads
 pip3 install phonenumbers
 ```
 
@@ -47,4 +48,5 @@ To leave the virtual environment, run
 ```bash
 deactivate
 ```
-And you're good to go.
+
+To make sure image links render correctly, you'll need to change the IPs used in config.py to match the IP of your server. If you're hosting it locally, this doesn't need to be changed.
