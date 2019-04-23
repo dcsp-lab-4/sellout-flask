@@ -13,6 +13,8 @@ To run this project, you'll need a few things installed:
   * The module that handles database access for us
 - Flask-Migrate
   * The module that greatly simplifies updates to our database for us (adding/removing/modifying columns etc)
+- Flask-Uploads
+  * The module that handles image uploading for us
 - phonenumbers
   * The module that handles phone number parsing for us.
 - Elasticsearch
